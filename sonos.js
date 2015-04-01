@@ -86,36 +86,30 @@ SonosController.prototype.doGetTrackInfoCB = function(err, track) {
   console.log('                 ' + track.position + '/' + track.duration);
 };
 
-
-/*
-  getCurrent: function(device) {
-    device.currentTrack(
-      function(err, track) {
-        if (err) {
-          return;
-        }
-        if (!track.artist) {
-          return;
-        }
-        console.log('current: ' + track.artist + ' ' + track.title);
-      }
-    );
-  },
+/**
+ * ---------------------------------------
+ * automatic on script run
+ * ---------------------------------------
+ * searches for all Sonos Devices
+ * when any are found, is it a "selected" one
+ * if not, abort
+ * if selected, do runAction to run the desired action
  */
 
 // sonos.search - searches for Sonos devices on network
 sonos.search(function(device) {
   var sc = new SonosController(device);
-  if (sc.selected()) {
-    // this is our selected controller
-    if (!sc.runAction('pausePlay')) {
-      console.log('ran but returned false');
-      process.exit(1);
-    }
-    // ran successfully
-    console.log('ran successfully');
-    process.exit(0);
+  if (!sc.selected()) {
+    return;
   }
+  // this is our selected controller
+  if (!sc.runAction('pausePlay')) {
+    console.log('ran but returned false');
+    process.exit(1);
+  }
+  // ran successfully
+  console.log('ran successfully');
+  process.exit(0);
 });
 
 
