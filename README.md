@@ -10,7 +10,7 @@ and to use personally for the control of my own Sonos speakers.
 - [ ] configuration file
 - [x] acts only only the configured device
 - [x] supports pause/play toggle
-- [ ] built in support for Alfred Workflow (and thus a global hotkey shortcut)
+- [x] built in support for Alfred Workflow (and thus a global hotkey shortcut)
 
 ## Thanks
 
