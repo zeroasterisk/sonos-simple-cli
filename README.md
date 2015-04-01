@@ -54,3 +54,11 @@ then click save.
 Finally, drag a line between them.
 
 ![ss](http://puu.sh/gY1hB/33dd7b1162.png)
+
+Bonus Points, output when done
+
+Add an `output > notification` and setup as follows
+
+![ss](http://puu.sh/gY211/4eaa413cdf.png)
+
+then connect and you're all set
