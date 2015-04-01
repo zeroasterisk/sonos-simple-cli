@@ -1,5 +1,6 @@
 var sonos = require('sonos');
-
+var path = require('path');
+var flatCache = require('flat-cache')
 
 // -----------------------------------------
 //  CLI script runner
@@ -8,6 +9,7 @@ var sonos = require('sonos');
 // TODO split to own file
 var SonosSimpleCli = function SonosSimpleCli(args) {
   this.device = null;
+  this.cache = null;
   this.config = {
     roomName : 'Office/Upstairs',
     action: 'pausePlay'
@@ -62,7 +64,18 @@ SonosSimpleCli.prototype.setup = function(args) {
     console.log('BAD ACTION');
     this.help();
   }
-  return this.config.action;
+
+
+  // look for cached "found" devices -- a heck of a lot faster
+  this.cache = flatCache.load('sonosSimpleCliCache');
+  device = this.cache.getKey('device')
+  if (device) {
+    this.device = new sonos.Sonos(device.host, device.port);
+  }
+  console.log('this.device from cache');
+  console.log(this.device);
+
+
 };
 
 // run functionality
@@ -83,30 +96,58 @@ SonosSimpleCli.prototype.run = function() {
 //   searches for sonos components and runs action
 //   TODO - cache last found component
 SonosSimpleCli.prototype.getDevice = function() {
-  sonos.search(this.setDevice.bind(this));
+  sonos.search(this.checkDevice.bind(this));
 };
-// callback, sets the device
-SonosSimpleCli.prototype.setDevice = function(device) {
-  sc = new SonosController(device);
-  sc.config = this.config;
-  if (!sc.selected()) {
+
+// callback, checks the device
+SonosSimpleCli.prototype.checkDevice = function(device) {
+  device.deviceDescription(this.checkDeviceCB.bind(this, device));
+};
+
+// when we get the callback
+SonosSimpleCli.prototype.checkDeviceCB = function(device, err, info) {
+  if (!device) {
+    console.log('ERR - no device for checkDeviceCB()');
+    process.exit(1);
+  }
+  if (err) {
+    console.log('ERR - checkDeviceCB()');
+    console.log(err);
+    process.exit(1);
+  }
+  if (info.roomName != this.config.roomName) {
     return;
   }
+  this.setDevice(device);
+};
+
+
+// callback, sets the device
+SonosSimpleCli.prototype.setDevice = function(device) {
+  console.log('setDevice');
+  console.log(device);
+  sc = new SonosController(device);
+  sc.config = this.config;
   // this is our selected controller
   this.device = device;
+  this.cache.setKey('device', device);
+  this.cache.save();
   this.sc = sc;
   // run callback
   this.runAction(this.config.action);
 };
 
+// run the action on out configured device / SonosController
 SonosSimpleCli.prototype.runAction = function(action) {
+  if (!this.sc) {
+    console.log('ERR - runAction() has no this.sc setup');
+    console.log(err);
+    process.exit(1);
+  }
   if (!this.sc.runAction(this.config.action)) {
     console.log('ran but returned false');
     process.exit(1);
   }
-  // ran successfully
-  console.log('ran successfully');
-  process.exit(0);
 };
 
 
@@ -144,34 +185,16 @@ SonosController.prototype._handleIfError = function(err, message) {
   }
 };
 
-// get device info - select to self
-SonosController.prototype.selected = function() {
-    this.device.deviceDescription(this.selectedCB.bind(this));
-    //(SonosController.confirm.bind(undefined, device));
-};
-// when we get the callback
-SonosController.prototype.selectedCB = function(err, info) {
-  this._handleIfError(err);
-  this.info = info;
-  if (info.roomName != this.config.roomName) {
-    return false;
-  }
-  this.runAction();
-};
-
 // run the action (TODO switch to script runner?)
-SonosController.prototype.runAction = function() {
-  switch(this.config.action) {
+SonosController.prototype.runAction = function(action) {
+  switch(action) {
     case 'playpause':
-      this.doGetTrackInfo();
       this.doPausePlay();
     break;
     case 'play':
-      this.doGetTrackInfo();
       this.doPlay();
     break;
     case 'pause':
-      this.doGetTrackInfo();
       this.doPause();
     break;
     case 'next':
@@ -180,7 +203,10 @@ SonosController.prototype.runAction = function() {
     case 'prev':
       this.doPrev();
     break;
+    default:
+      return false;
   }
+  return true;
 };
 
 // do Pause/Play
@@ -197,9 +223,9 @@ SonosController.prototype.doPausePlayCB = function(err, state) {
 };
 
 SonosController.prototype.doPlay = function() {
-  this.device.play(this.doSetPlayCB.bind(this));
+  this.device.play(this.doPlayCB.bind(this));
 };
-SonosController.prototype.doSetPlayCB = function(err, state) {
+SonosController.prototype.doPlayCB = function(err, state) {
   this._handleIfError(err);
   if (!state) {
     console.log('  ???? SONOS not set to PLAYING ???? ');
@@ -210,9 +236,9 @@ SonosController.prototype.doSetPlayCB = function(err, state) {
 };
 
 SonosController.prototype.doPause = function() {
-  this.device.pause(this.doSetPauseCB.bind(this));
+  this.device.pause(this.doPauseCB.bind(this));
 };
-SonosController.prototype.doSetPauseCB = function(err, state) {
+SonosController.prototype.doPauseCB = function(err, state) {
   this._handleIfError(err);
   if (!state) {
     console.log('  ???? SONOS not set to PAUSED ???? ');
@@ -230,11 +256,11 @@ SonosController.prototype.doSetNextCB = function(err, state) {
   console.log('  > SONOS going to NEXT >>');
   this.doGetTrackInfoAndExit();
 };
-SonosController.prototype.doPrev = function() {
-  this.device.previous(this.doSetPrevCB.bind(this));
-};
 
-SonosController.prototype.doSetPrevCB = function(err, state) {
+SonosController.prototype.doPrev = function() {
+  this.device.previous(this.doPrevCB.bind(this));
+};
+SonosController.prototype.doPrevCB = function(err, state) {
   this._handleIfError(err);
   console.log('  > SONOS going to PREV <<');
   this.doGetTrackInfoAndExit();
@@ -251,6 +277,10 @@ SonosController.prototype.doGetTrackInfoCB = function(err, track) {
 };
 SonosController.prototype.doGetTrackInfoAndExit = function() {
   this.device.currentTrack(this.doGetTrackInfoCB.bind(this));
+  setTimeout(function() {
+    console.log('...timout...');
+    process.exit(0);
+  }, 3000);
 };
 SonosController.prototype.doGetTrackInfoAndExitCB = function(err, track) {
   this.doGetTrackInfoCB(err, track);
