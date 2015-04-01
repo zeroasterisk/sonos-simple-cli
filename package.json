@@ -1,0 +1,25 @@
+{
+  "name": "sonos-simple-cli",
+  "version": "0.0.1",
+  "description": "Control Sonos from CLI with pause|play and Alfred support",
+  "main": "sonos.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zeroasterisk/sonos-simple-cli.git"
+  },
+  "keywords": [
+    "sonos"
+  ],
+  "author": "alan blount",
+  "license": "mit",
+  "bugs": {
+    "url": "https://github.com/zeroasterisk/sonos-simple-cli/issues"
+  },
+  "homepage": "https://github.com/zeroasterisk/sonos-simple-cli",
+  "dependencies": {
+    "sonos": "^0.8.0"
+  }
+}
