@@ -1,7 +1,7 @@
 var sonos = require('sonos');
-//var _ = require('underscore');
 
 
+// TODO split to own file
 var SonosController = function SonosController(device) {
   this.device = device;
   this.info = null;
@@ -86,6 +86,7 @@ SonosController.prototype.doGetTrackInfoCB = function(err, track) {
   console.log('                 ' + track.position + '/' + track.duration);
 };
 
+
 /**
  * ---------------------------------------
  * automatic on script run
@@ -113,11 +114,4 @@ sonos.search(function(device) {
 });
 
 
-
-
-
-
-
-
-//process.exit(code=0);
 
