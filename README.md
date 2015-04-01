@@ -20,15 +20,19 @@ https://github.com/bencevans/node-sonos
 
 ## Install
 
-    cd ~
-    mkdir sonos
-    npm install sonos-simple-cli
+Ummmm... not sure yet...
 
-or
+Should this be a global CLI utilty?
+
+### Manual Crappy Install
 
     cd ~
-    mkdir sonos
-    npm install https://github.com/zeroasterisk/sonos-simple-cli.git
+    mkdir bin
+    git clone https://github.com/zeroasterisk/sonos-simple-cli.git
+    cd sonos-simple-cli
+    npm install
+    cd ..
+    ln -s sonos-simple-cli/sonos.js ./
 
 ## Configure for Alfred
 
