@@ -28,6 +28,11 @@ SonosSimpleCli.prototype.help = function() {
   console.log('node sonos.js pause');
   console.log('node sonos.js next');
   console.log('node sonos.js prev');
+  console.log('node sonos.js volup');
+  console.log('node sonos.js voldown');
+  console.log('node sonos.js mute');
+  console.log('node sonos.js unmute');
+  console.log('node sonos.js mutetoggle');
   //console.log('node sonos.js config');
   console.log('node sonos.js clearCache');
   console.log('-----------------------------');
@@ -41,6 +46,9 @@ SonosSimpleCli.prototype.setup = function(args) {
   this.config.action = null;
   for (i = 0; i < process.argv.length; i++) {
     switch(process.argv[i]) {
+      case 'help':
+        this.help();
+        break;
       case 'playpause':
         this.config.action = process.argv[i];
         break;
@@ -54,6 +62,21 @@ SonosSimpleCli.prototype.setup = function(args) {
         this.config.action = process.argv[i];
         break;
       case 'prev':
+        this.config.action = process.argv[i];
+        break;
+      case 'volup':
+        this.config.action = process.argv[i];
+        break;
+      case 'voldown':
+        this.config.action = process.argv[i];
+        break;
+      case 'mute':
+        this.config.action = process.argv[i];
+        break;
+      case 'unmute':
+        this.config.action = process.argv[i];
+        break;
+      case 'mutetoggle':
         this.config.action = process.argv[i];
         break;
       case 'clearCache':
@@ -183,19 +206,34 @@ SonosController.prototype.runAction = function(action) {
   switch(action) {
     case 'playpause':
       this.doPausePlay();
-    break;
+      break;
     case 'play':
       this.doPlay();
-    break;
+      break;
     case 'pause':
       this.doPause();
-    break;
+      break;
     case 'next':
       this.doNext();
-    break;
+      break;
     case 'prev':
       this.doPrev();
-    break;
+      break;
+    case 'volup':
+      this.doVolup();
+      break;
+    case 'voldown':
+      this.doVoldown();
+      break;
+    case 'mute':
+      this.doMuteon();
+      break;
+    case 'unmute':
+      this.doMuteoff();
+      break;
+    case 'mutetoggle':
+      this.doMutetoggle();
+      break;
     default:
       return false;
   }
@@ -204,60 +242,122 @@ SonosController.prototype.runAction = function(action) {
 
 // do Pause/Play
 SonosController.prototype.doPausePlay = function() {
-  this.device.getCurrentState(this.doPausePlayCB.bind(this));
-};
-SonosController.prototype.doPausePlayCB = function(err, state) {
-  this._handleIfError(err);
-  if (state == 'paused') {
-    this.doPlay();
-  } else {
-    this.doPause();
-  }
+  this.device.getCurrentState(
+      function(err, state) {
+        this._handleIfError(err);
+        if (state == 'paused') {
+          this.doPlay();
+        } else {
+          this.doPause();
+        }
+      }.bind(this)
+  );
 };
 
 SonosController.prototype.doPlay = function() {
-  this.device.play(this.doPlayCB.bind(this));
-};
-SonosController.prototype.doPlayCB = function(err, state) {
-  this._handleIfError(err);
-  if (!state) {
-    console.log('  ???? SONOS not set to PLAYING ???? ');
-    process.exit(1);
-  }
-  console.log('  > SONOS set to PLAYING');
-  this.doGetTrackInfoAndExit();
+  this.device.play(
+    function(err) {
+      this._handleIfError(err);
+      console.log('  > SONOS set to PLAYING');
+      this.doGetTrackInfoAndExit();
+    }.bind(this)
+  );
 };
 
 SonosController.prototype.doPause = function() {
-  this.device.pause(this.doPauseCB.bind(this));
-};
-SonosController.prototype.doPauseCB = function(err, state) {
-  this._handleIfError(err);
-  if (!state) {
-    console.log('  ???? SONOS not set to PAUSED ???? ');
-    process.exit(1);
-  }
-  console.log('  > SONOS set to PAUSED');
-  this.doGetTrackInfoAndExit();
+  this.device.pause(
+    function(err) {
+      this._handleIfError(err);
+      console.log('  > SONOS set to PAUSED');
+      this.doGetTrackInfoAndExit();
+    }.bind(this)
+  );
 };
 
 SonosController.prototype.doNext = function() {
-  this.device.next(this.doSetNextCB.bind(this));
-};
-SonosController.prototype.doSetNextCB = function(err, state) {
-  this._handleIfError(err);
-  console.log('  > SONOS going to NEXT >>');
-  this.doGetTrackInfoAndExit();
+  this.device.next(
+    function(err) {
+      this._handleIfError(err);
+      console.log('  > SONOS going to NEXT >>');
+      this.doGetTrackInfoAndExit();
+    }.bind(this)
+  );
 };
 
 SonosController.prototype.doPrev = function() {
-  this.device.previous(this.doPrevCB.bind(this));
+  this.device.previous(
+    function(err) {
+      this._handleIfError(err);
+      console.log('  > SONOS going to PREV <<');
+      this.doGetTrackInfoAndExit();
+    }.bind(this)
+  );
 };
-SonosController.prototype.doPrevCB = function(err, state) {
-  this._handleIfError(err);
-  console.log('  > SONOS going to PREV <<');
-  this.doGetTrackInfoAndExit();
+
+SonosController.prototype.doVolup = function() {
+  this.device.getVolume(function(callback, volume) {
+    volume = Math.min(100, volume + 10);
+    this.device.setVolume(
+      volume,
+      function(err) {
+        this._handleIfError(err);
+        console.log('  > SONOS volume + to ' + volume + '%');
+        this.doGetTrackInfoAndExit();
+      }.bind(this)
+    );
+  }.bind(this));
 };
+
+SonosController.prototype.doVoldown = function() {
+  this.device.getVolume(function(err, volume) {
+    this._handleIfError(err);
+    volume = Math.max(0, volume - 10);
+    this.device.setVolume(
+      volume,
+      function(err) {
+        this._handleIfError(err);
+        console.log('  > SONOS volume - to ' + volume + '%');
+        this.doGetTrackInfoAndExit();
+      }.bind(this)
+    );
+  }.bind(this));
+};
+
+SonosController.prototype.doMuteon = function() {
+  this.device.setMuted(
+    1,
+    function(err) {
+      this._handleIfError(err);
+      console.log('  > SONOS volume MUTED');
+      this.doGetTrackInfoAndExit();
+    }.bind(this)
+  );
+};
+
+SonosController.prototype.doMuteoff = function() {
+  this.device.setMuted(
+    0,
+    function(err) {
+      this._handleIfError(err);
+      console.log('  > SONOS volume UN-MUTED');
+      this.doGetTrackInfoAndExit();
+    }.bind(this)
+  );
+};
+
+SonosController.prototype.doMutetoggle = function() {
+  this.device.getMuted(
+    function(err, muted) {
+      this._handleIfError(err);
+      if (muted) {
+        this.doMuteoff();
+      } else {
+        this.doMuteon();
+      }
+    }.bind(this)
+  );
+};
+
 
 // do Get Current Track Info
 SonosController.prototype.doGetTrackInfo = function() {
