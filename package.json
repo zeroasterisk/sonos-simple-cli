@@ -1,6 +1,6 @@
 {
   "name": "sonos-simple-cli",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Control Sonos from CLI with pause|play and Alfred support",
   "main": "sonos.js",
   "scripts": {
