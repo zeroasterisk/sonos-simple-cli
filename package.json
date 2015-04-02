@@ -1,6 +1,6 @@
 {
   "name": "sonos-simple-cli",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Control Sonos from CLI with pause|play mute toggle and more, with Alfred support for keyboard shortcuts",
   "preferGlobal": "true",
   "bin": {
@@ -24,7 +24,9 @@
   "homepage": "https://github.com/zeroasterisk/sonos-simple-cli",
   "dependencies": {
     "flat-cache": "^1.0.3",
+    "nconf": "^0.7.1",
     "path": "^0.11.14",
-    "sonos": "^0.8.0"
+    "sonos": "^0.8.0",
+    "user-home": "^1.1.1"
   }
 }

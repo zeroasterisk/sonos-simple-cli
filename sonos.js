@@ -1,7 +1,9 @@
 #!/usr/bin/env node
-var sonos = require('sonos');
+var userHome = require('user-home');
 var path = require('path');
+var nconf = require('nconf');
 var flatCache = require('flat-cache')
+var sonos = require('sonos');
 
 // -----------------------------------------
 //  CLI script runner
@@ -11,11 +13,11 @@ var flatCache = require('flat-cache')
 var SonosSimpleCli = function SonosSimpleCli(args) {
   this.device = null;
   this.cache = null;
-  this.config = {
-    roomName : 'Office/Upstairs',
-    action: 'pausePlay'
-  };
-  this.setup(args);
+  this.conf(args);
+
+  // look for cached "found" devices -- a heck of a lot faster
+  this.cache = flatCache.load('sonosSimpleCliCache', path.resolve(nconf.get('tmp')));
+
   this.setupDevice(this.run.bind(this));
 };
 
@@ -40,65 +42,41 @@ SonosSimpleCli.prototype.help = function() {
   process.exit(1);
 };
 
-// determine runAction
-//   parses CLI arguments for supported actions
-SonosSimpleCli.prototype.setup = function(args) {
-  // get the action
-  this.config.action = null;
-  for (i = 0; i < process.argv.length; i++) {
-    switch(process.argv[i]) {
-      case 'help':
-        this.help();
-        break;
-      case 'playpause':
-        this.config.action = process.argv[i];
-        break;
-      case 'play':
-        this.config.action = process.argv[i];
-        break;
-      case 'pause':
-        this.config.action = process.argv[i];
-        break;
-      case 'next':
-        this.config.action = process.argv[i];
-        break;
-      case 'prev':
-        this.config.action = process.argv[i];
-        break;
-      case 'volup':
-        this.config.action = process.argv[i];
-        break;
-      case 'voldown':
-        this.config.action = process.argv[i];
-        break;
-      case 'mute':
-        this.config.action = process.argv[i];
-        break;
-      case 'unmute':
-        this.config.action = process.argv[i];
-        break;
-      case 'mutetoggle':
-        this.config.action = process.argv[i];
-        break;
-      case 'clearCache':
-        this.config.action = process.argv[i];
-        break;
-    }
+// setup and configure
+//   uses nconf for handling conditions
+SonosSimpleCli.prototype.conf = function(args) {
+  nconf.env().argv();
+  nconf.use('file', {
+    type: 'file',
+    file: '.sonos.json',
+    dir: userHome,
+    search: true
+  }).load();
+  nconf.defaults({
+    // What is the name of your SonosController?
+    roomName : null,
+    // Where we store the cache files (directory)
+    tmp : '/tmp',
+    // Placeholder where we will store the action
+    action: this.getActionFromArgs(args)
+  });
+
+  // validate that we have a roomName
+  if (nconf.get('roomName') === null) {
+    console.log(nconf);
+    console.log('You need to configure your Sonos Controller room name');
+    console.log('echo \'{\"roomName\": \"My Controller Room Here\"}\' > ~/.sonos.json');
+    process.exit(1);
   }
-  // get the controller roomName
-  // TODO
-  // no action? fail
-  if (this.config.action == null) {
-    console.log('BAD ACTION');
+
+  // validate that we have an action
+  if (nconf.get('action') === null) {
+    console.log('You need to pass in an action');
     this.help();
   }
 
-
-  // look for cached "found" devices -- a heck of a lot faster
-  this.cache = flatCache.load('sonosSimpleCliCache');
-
   // if we are clearCache
-  if (this.config.action == 'clearCache') {
+  if (nconf.get('action') == 'clearCache') {
     this.cache.removeKey('device');
     this.cache.save();
     console.log('  cache cleared');
@@ -106,6 +84,52 @@ SonosSimpleCli.prototype.setup = function(args) {
   }
 
 }
+
+// determine runAction
+//   parses CLI arguments for supported actions
+SonosSimpleCli.prototype.getActionFromArgs = function(args) {
+  for (i = 0; i < args.length; i++) {
+    switch(args[i]) {
+      case 'help':
+        this.help();
+        break;
+      case 'playpause':
+        return args[i];
+        break;
+      case 'play':
+        return args[i];
+        break;
+      case 'pause':
+        return args[i];
+        break;
+      case 'next':
+        return args[i];
+        break;
+      case 'prev':
+        return args[i];
+        break;
+      case 'volup':
+        return args[i];
+        break;
+      case 'voldown':
+        return args[i];
+        break;
+      case 'mute':
+        return args[i];
+        break;
+      case 'unmute':
+        return args[i];
+        break;
+      case 'mutetoggle':
+        return args[i];
+        break;
+      case 'clearCache':
+        return args[i];
+        break;
+    }
+  }
+  return null;
+};
 
 // setupDevice
 SonosSimpleCli.prototype.setupDevice = function(callback) {
@@ -135,7 +159,7 @@ SonosSimpleCli.prototype.run = function() {
     this.help();
   }
 
-  return this.sc.runAction(this.config.action);
+  return this.sc.runAction(nconf.get('action'));
 };
 
 // callback, checks the device
@@ -154,7 +178,7 @@ SonosSimpleCli.prototype.checkDeviceCB = function(callback, device, err, info) {
     console.log(err);
     process.exit(1);
   }
-  if (info.roomName != this.config.roomName) {
+  if (info.roomName != nconf.get('roomName')) {
     return;
   }
 
@@ -176,7 +200,6 @@ SonosSimpleCli.prototype.setDevice = function(device) {
 
 	// make a new sc (SonosController)
   this.sc = new SonosController(device);
-  this.sc.config = this.config;
 };
 
 

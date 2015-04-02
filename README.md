@@ -7,11 +7,14 @@ and to use personally for the control of my own Sonos speakers.
 
 ## Features
 
-- [ ] configuration file to setup which `roomName` you want to use
-- [x] acts only only the configured device
+- [x] acts only only the configured device via `roomName` config file `~/.sonos.json`
 - [x] caches a found/configured device (faster startup)
 - [x] supports pause/play toggle, and prev/next, vol +/-
 - [x] built in support for Alfred Workflow (and thus a global hotkey shortcut)
+- [x] configuration file `~/.sonos.json` to setup which `roomName` you want to use
+- [ ] fix Alfred path so we don't need the `~/bin/` symlink
+- [ ] better configuration file setup
+- [ ] support for "get first" vs. configured `roomName`
 
 ## Thanks
 
@@ -25,15 +28,29 @@ https://github.com/bencevans/node-sonos
 $ npm install sonos-simple-cli -g
 ```
 
-### Manual Crappy Install
+If you want to use Alfred Workflow - it has path problems which I'm currently
+solving with an explicit symlink *(something more elegant coming)*
 
-    cd ~
-    mkdir bin
-    git clone https://github.com/zeroasterisk/sonos-simple-cli.git
-    cd sonos-simple-cli
-    npm install
-    cd ..
-    ln -s sonos-simple-cli/sonos.js ./
+```
+cd ~
+mkdir bin
+cd bin
+ln -s $(which sonos-simple-cli) sonos-simple-cli
+```
+
+### Development / Manual Install
+
+if for some reason, you want to develop on this and play with it,
+here's a guide which shuld get you setup and functional pretty easily.
+
+```
+cd ~
+mkdir bin
+git clone https://github.com/zeroasterisk/sonos-simple-cli.git sonos-simple-cli-repo
+ln -s sonos-simple-cli-repo/sonos.js sonos-simple-cli
+cd sonos-simple-cli-repo
+npm install
+```
 
 ## Manual Script Running
 
@@ -42,20 +59,20 @@ $ node ~/bin/sonos.js help
 -----------------------------
 ----- Sonos Simple CLI ------
 -----------------------------
-node sonos.js playpause
-node sonos.js play
-node sonos.js pause
-node sonos.js next
-node sonos.js prev
-node sonos.js volup
-node sonos.js voldown
-node sonos.js mute
-node sonos.js unmute
-node sonos.js mutetoggle
-node sonos.js clearCache
+sonos-simple-cli playpause
+sonos-simple-cli play
+sonos-simple-cli pause
+sonos-simple-cli next
+sonos-simple-cli prev
+sonos-simple-cli volup
+sonos-simple-cli voldown
+sonos-simple-cli mute
+sonos-simple-cli unmute
+sonos-simple-cli mutetoggle
+sonos-simple-cli clearCache
 -----------------------------
 
-$ node ~/bin/sonos.js playpause
+$ ~/bin/sonos-simple-cli playpause
   > SONOS set to PAUSED
   Beastie Boys "I Don't Know"
     @ 58/180 sec
