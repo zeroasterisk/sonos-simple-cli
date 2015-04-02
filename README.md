@@ -9,7 +9,8 @@ and to use personally for the control of my own Sonos speakers.
 
 - [ ] configuration file
 - [x] acts only only the configured device
-- [x] supports pause/play toggle
+- [x] caches a found/configured device (faster startup)
+- [x] supports pause/play toggle, and prev/next, vol +/-
 - [x] built in support for Alfred Workflow (and thus a global hotkey shortcut)
 
 ## Thanks
@@ -33,6 +34,32 @@ Should this be a global CLI utilty?
     npm install
     cd ..
     ln -s sonos-simple-cli/sonos.js ./
+
+## Manual Script Running
+
+```
+$ node ~/bin/sonos.js help
+-----------------------------
+----- Sonos Simple CLI ------
+-----------------------------
+node sonos.js playpause
+node sonos.js play
+node sonos.js pause
+node sonos.js next
+node sonos.js prev
+node sonos.js volup
+node sonos.js voldown
+node sonos.js mute
+node sonos.js unmute
+node sonos.js mutetoggle
+node sonos.js clearCache
+-----------------------------
+
+$ node ~/bin/sonos.js playpause
+  > SONOS set to PAUSED
+  Beastie Boys "I Don't Know"
+    @ 58/180 sec
+```
 
 ## Configure for Alfred
 
