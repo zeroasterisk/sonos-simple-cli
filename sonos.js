@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 var sonos = require('sonos');
 var path = require('path');
 var flatCache = require('flat-cache')

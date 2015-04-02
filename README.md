@@ -21,9 +21,9 @@ https://github.com/bencevans/node-sonos
 
 ## Install
 
-Ummmm... not sure yet...
-
-Should this be a global CLI utilty?
+```
+$ npm install sonos-simple-cli -g
+```
 
 ### Manual Crappy Install
 
