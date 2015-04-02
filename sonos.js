@@ -15,7 +15,7 @@ var SonosSimpleCli = function SonosSimpleCli(args) {
     action: 'pausePlay'
   };
   this.setup(args);
-  this.run();
+  this.setupDevice(this.run.bind(this));
 };
 
 // help
@@ -29,6 +29,7 @@ SonosSimpleCli.prototype.help = function() {
   console.log('node sonos.js next');
   console.log('node sonos.js prev');
   //console.log('node sonos.js config');
+  console.log('node sonos.js clearCache');
   console.log('-----------------------------');
   process.exit(1);
 };
@@ -55,6 +56,9 @@ SonosSimpleCli.prototype.setup = function(args) {
       case 'prev':
         this.config.action = process.argv[i];
         break;
+      case 'clearCache':
+        this.config.action = process.argv[i];
+        break;
     }
   }
   // get the controller roomName
@@ -68,44 +72,55 @@ SonosSimpleCli.prototype.setup = function(args) {
 
   // look for cached "found" devices -- a heck of a lot faster
   this.cache = flatCache.load('sonosSimpleCliCache');
+
+  // if we are clearCache
+  if (this.config.action == 'clearCache') {
+    this.cache.removeKey('device');
+    this.cache.save();
+    console.log('  cache cleared');
+    process.exit(0);
+  }
+
+}
+
+// setupDevice
+SonosSimpleCli.prototype.setupDevice = function(callback) {
+
   device = this.cache.getKey('device')
   if (device) {
-    this.device = new sonos.Sonos(device.host, device.port);
+    // device already set... cached...
+    this.setDevice(new sonos.Sonos(device.host, device.port));
+
+    // setup complete
+    if (typeof callback == "function") {
+      callback();
+    }
+    return;
   }
-  console.log('this.device from cache');
-  console.log(this.device);
 
-
+  // find and get the device, pass through callback
+  // got get the device, and auto setup and run
+  sonos.search(this.checkDevice.bind(this, callback));
 };
 
 // run functionality
 SonosSimpleCli.prototype.run = function() {
-  if (this.sc) {
-    // sc already set... cached...
-    return this.runAction(this.config.action);
+  if (!this.sc) {
+    console.log(this);
+    console.log('Can not run - no SonosController Setup');
+    this.help();
   }
-  if (this.device) {
-    // device already set... cached...
-    return this.setDevice(this.device);
-  }
-  // got get the device, and auto setup and run
-  this.getDevice();
-};
 
-// run functionality
-//   searches for sonos components and runs action
-//   TODO - cache last found component
-SonosSimpleCli.prototype.getDevice = function() {
-  sonos.search(this.checkDevice.bind(this));
+  return this.sc.runAction(this.config.action);
 };
 
 // callback, checks the device
-SonosSimpleCli.prototype.checkDevice = function(device) {
-  device.deviceDescription(this.checkDeviceCB.bind(this, device));
+SonosSimpleCli.prototype.checkDevice = function(callback, device) {
+  device.deviceDescription(this.checkDeviceCB.bind(this, callback, device));
 };
 
 // when we get the callback
-SonosSimpleCli.prototype.checkDeviceCB = function(device, err, info) {
+SonosSimpleCli.prototype.checkDeviceCB = function(callback, device, err, info) {
   if (!device) {
     console.log('ERR - no device for checkDeviceCB()');
     process.exit(1);
@@ -118,51 +133,29 @@ SonosSimpleCli.prototype.checkDeviceCB = function(device, err, info) {
   if (info.roomName != this.config.roomName) {
     return;
   }
+
+  // valid device - setting it now
   this.setDevice(device);
+
+  if (typeof callback == "function") {
+    callback();
+  }
 };
 
 
 // callback, sets the device
 SonosSimpleCli.prototype.setDevice = function(device) {
-  console.log('setDevice');
-  console.log(device);
-  sc = new SonosController(device);
-  sc.config = this.config;
   // this is our selected controller
   this.device = device;
   this.cache.setKey('device', device);
   this.cache.save();
-  this.sc = sc;
-  // run callback
-  this.runAction(this.config.action);
-};
 
-// run the action on out configured device / SonosController
-SonosSimpleCli.prototype.runAction = function(action) {
-  if (!this.sc) {
-    console.log('ERR - runAction() has no this.sc setup');
-    console.log(err);
-    process.exit(1);
-  }
-  if (!this.sc.runAction(this.config.action)) {
-    console.log('ran but returned false');
-    process.exit(1);
-  }
+	// make a new sc (SonosController)
+  this.sc = new SonosController(device);
+  this.sc.config = this.config;
 };
 
 
-
-/**
- * ---------------------------------------
- * automatic on script run
- * ---------------------------------------
- * searches for all Sonos Devices
- * when any are found, is it a "selected" one
- * if not, abort
- * if selected, do runAction to run the desired action
- */
-
-// sonos.search - searches for Sonos devices on network
 
 // -----------------------------------------
 // SonosController per-device workflow
@@ -276,7 +269,7 @@ SonosController.prototype.doGetTrackInfoCB = function(err, track) {
   console.log('    @ ' + track.position + '/' + track.duration + ' sec');
 };
 SonosController.prototype.doGetTrackInfoAndExit = function() {
-  this.device.currentTrack(this.doGetTrackInfoCB.bind(this));
+  this.device.currentTrack(this.doGetTrackInfoAndExitCB.bind(this));
   setTimeout(function() {
     console.log('...timout...');
     process.exit(0);
@@ -286,6 +279,19 @@ SonosController.prototype.doGetTrackInfoAndExitCB = function(err, track) {
   this.doGetTrackInfoCB(err, track);
   process.exit(0);
 };
+
+
+/**
+ * ---------------------------------------
+ * automatic on script run
+ * ---------------------------------------
+ * uses cached Sonos Device
+ *   or searches for all Sonos Devices
+ *     when any are found
+ *       if they are in the right roomName, cache and use Sonos Device
+ *
+ * do runAction on the Sonos Device
+ */
 
 
 
