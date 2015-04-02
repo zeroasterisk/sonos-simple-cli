@@ -207,6 +207,9 @@ SonosController.prototype.runAction = function(action) {
     case 'playpause':
       this.doPausePlay();
       break;
+    case 'pauseplay':
+      this.doPausePlay();
+      break;
     case 'play':
       this.doPlay();
       break;
