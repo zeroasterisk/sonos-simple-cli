@@ -7,7 +7,7 @@ and to use personally for the control of my own Sonos speakers.
 
 ## Features
 
-- [ ] configuration file
+- [ ] configuration file to setup which `roomName` you want to use
 - [x] acts only only the configured device
 - [x] caches a found/configured device (faster startup)
 - [x] supports pause/play toggle, and prev/next, vol +/-
@@ -62,6 +62,28 @@ $ node ~/bin/sonos.js playpause
 ```
 
 ## Configure for Alfred
+
+Install [Alfred](http://www.alfredapp.com/) *if not already installed*.
+
+To get the workflow, just double-click on `sonos-simple-cli.alfredworkflow` and
+install it.
+
+> You will recognise Alfred workflows by their .alfredworkflow file extension and their icon.
+>
+> To install a workflow, simply double-click the workflow file on your Mac. Alfred will show you a preview of the name and description of the workflow as well as the details for the developer, if available. Click the "Import" button to add the workflow to the sidebar on the left.
+
+http://support.alfredapp.com/workflows:installing/
+
+* CMD+F7 -> prev
+* CMD+F8 -> play/pause
+* CMD+F9 -> next
+* CMD+F10 -> mutetoggle
+* CMD+F11 -> volume down
+* CMD+F12 -> volume up
+
+### Manual Setup in Alfred
+
+*here's how I created the Alfred Worflow*
 
 Alfred > Workflows
 
