@@ -1,6 +1,6 @@
 {
   "name": "sonos-simple-cli",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Control Sonos from CLI with pause|play mute toggle and more, with Alfred support for keyboard shortcuts",
   "preferGlobal": "true",
   "bin": {

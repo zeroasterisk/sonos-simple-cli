@@ -63,9 +63,11 @@ SonosSimpleCli.prototype.conf = function(args) {
 
   // validate that we have a roomName
   if (nconf.get('roomName') === null) {
-    console.log(nconf);
     console.log('You need to configure your Sonos Controller room name');
+    console.log('');
     console.log('echo \'{\"roomName\": \"My Controller Room Here\"}\' > ~/.sonos.json');
+    console.log('');
+    console.log('  (sorry, you HAVE to do this, even if only 1 controller, for now)');
     process.exit(1);
   }
 

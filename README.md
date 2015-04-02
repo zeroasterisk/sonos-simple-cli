@@ -13,8 +13,9 @@ and to use personally for the control of my own Sonos speakers.
 - [x] built in support for Alfred Workflow (and thus a global hotkey shortcut)
 - [x] configuration file `~/.sonos.json` to setup which `roomName` you want to use
 - [ ] fix Alfred path so we don't need the `~/bin/` symlink
-- [ ] better configuration file setup
-- [ ] support for "get first" vs. configured `roomName`
+- [ ] TODO allow `roomName:*` all vs. configured `roomName`
+- [ ] TODO allow `roomName:first` "get first" vs. configured `roomName`
+- [ ] TODO autoconfigure: look for all, prompt selection, cache
 
 ## Thanks
 
@@ -51,6 +52,23 @@ ln -s sonos-simple-cli-repo/sonos.js sonos-simple-cli
 cd sonos-simple-cli-repo
 npm install
 ```
+
+## Configure
+
+You must specify a `roomName` for this to work.
+
+*The theory being that you could use control different `roomName` "groups" in
+isolation.  It's also useful to only pause/play the music playing where you are
+vs. the whole network.*
+
+All we need is the `roomName` as a string:
+
+```
+echo '{"roomName": "My Controller Room Here"}' > ~/.sonos.json
+```
+
+eg: `cat ~/.sonos.json` should look like `{"roomName":"Living Room"}`
+
 
 ## Manual Script Running
 
